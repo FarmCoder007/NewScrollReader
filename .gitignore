@@ -63,3 +63,4 @@ app/daily
 app/libs/
 .DS_Store
 /.ssh/
+.idea/
