@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -190,6 +191,7 @@ public class PageView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        Log.e("PageView", "-----------------onDraw");
 
         //绘制背景
         canvas.drawColor(mBgColor);
@@ -244,6 +246,8 @@ public class PageView extends View {
                 }
                 mPageAnim.onTouchEvent(event);
                 break;
+            default:
+                break;
         }
         return true;
     }
@@ -273,8 +277,13 @@ public class PageView extends View {
         mPageLoader.pageCancel();
     }
 
+    /**
+     *  滑动计算   在onDraw中 每次绘制调用   而滑动 实际调用的是ScrollTo  等方法
+     *  ScrollTo 调用完毕后会 调用刷新方法   如此循环调用 需要在判断
+     */
     @Override
     public void computeScroll() {
+        Log.e("ScrollAnimation", "-----------------computeScroll");
         //进行滑动
         mPageAnim.scrollAnim();
         super.computeScroll();
@@ -317,7 +326,7 @@ public class PageView extends View {
     public void drawCurPage(boolean isUpdate) {
         if (!isPrepare) return;
 
-        if (!isUpdate){
+        if (!isUpdate) {
             if (mPageAnim instanceof ScrollPageAnim) {
                 ((ScrollPageAnim) mPageAnim).resetBitmap();
             }

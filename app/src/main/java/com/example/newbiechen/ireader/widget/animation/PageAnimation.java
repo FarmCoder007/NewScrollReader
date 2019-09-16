@@ -2,6 +2,7 @@ package com.example.newbiechen.ireader.widget.animation;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
@@ -13,6 +14,7 @@ import android.widget.Scroller;
  */
 
 public abstract class PageAnimation {
+    public static final String TAG = "PageAnimation";
     //正在使用的View
     protected View mView;
     //滑动装置
@@ -43,11 +45,11 @@ public abstract class PageAnimation {
     protected float mLastX;
     protected float mLastY;
 
-    public PageAnimation(int w, int h,View view,OnPageChangeListener listener){
-        this(w, h, 0, 0, view,listener);
+    public PageAnimation(int w, int h, View view, OnPageChangeListener listener) {
+        this(w, h, 0, 0, view, listener);
     }
 
-    public PageAnimation(int w, int h, int marginWidth, int marginHeight, View view,OnPageChangeListener listener){
+    public PageAnimation(int w, int h, int marginWidth, int marginHeight, View view, OnPageChangeListener listener) {
         mScreenWidth = w;
         mScreenHeight = h;
 
@@ -63,7 +65,13 @@ public abstract class PageAnimation {
         mScroller = new Scroller(mView.getContext(), new LinearInterpolator());
     }
 
-    public void setStartPoint(float x,float y){
+    /**
+     * 设置起始点坐标
+     *
+     * @param x
+     * @param y
+     */
+    public void setStartPoint(float x, float y) {
         mStartX = x;
         mStartY = y;
 
@@ -71,47 +79,56 @@ public abstract class PageAnimation {
         mLastY = mStartY;
     }
 
-    public void setTouchPoint(float x,float y){
+    /**
+     * 设置新的触摸点   同时记录上次触摸点的坐标
+     *
+     * @param x
+     * @param y
+     */
+    public void setTouchPoint(float x, float y) {
         mLastX = mTouchX;
         mLastY = mTouchY;
-
+//        Log.e(TAG, "setTouchPoint  x:" + x + "---y:" + y);
         mTouchX = x;
         mTouchY = y;
     }
 
-    public boolean isRunning(){
+    public boolean isRunning() {
         return isRunning;
     }
 
     /**
      * 开启翻页动画
      */
-    public void startAnim(){
-        if (isRunning){
+    public void startAnim() {
+        if (isRunning) {
             return;
         }
         isRunning = true;
     }
 
-    public void setDirection(Direction direction){
+    public void setDirection(Direction direction) {
         mDirection = direction;
     }
 
-    public Direction getDirection(){
+    public Direction getDirection() {
         return mDirection;
     }
 
-    public void clear(){
+    public void clear() {
         mView = null;
     }
+
     /**
      * 点击事件的处理
+     *
      * @param event
      */
     public abstract boolean onTouchEvent(MotionEvent event);
 
     /**
      * 绘制图形
+     *
      * @param canvas
      */
     public abstract void draw(Canvas canvas);
@@ -129,6 +146,7 @@ public abstract class PageAnimation {
 
     /**
      * 获取背景板
+     *
      * @return
      */
     public abstract Bitmap getBgBitmap();
@@ -138,8 +156,11 @@ public abstract class PageAnimation {
      */
     public abstract Bitmap getNextBitmap();
 
+    /**
+     * 翻页方向
+     */
     public enum Direction {
-        NONE(true),NEXT(true), PRE(true), UP(false), DOWN(false);
+        NONE(true), NEXT(true), PRE(true), UP(false), DOWN(false);
 
         public final boolean isHorizontal;
 
@@ -148,9 +169,14 @@ public abstract class PageAnimation {
         }
     }
 
+    /**
+     * 翻页监听
+     */
     public interface OnPageChangeListener {
         boolean hasPrev();
+
         boolean hasNext();
+
         void pageCancel();
     }
 
