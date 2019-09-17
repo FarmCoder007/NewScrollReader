@@ -769,6 +769,12 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
         mPageLoader = null;
     }
 
+    /**
+     * 控制音量键翻页
+     * @param keyCode
+     * @param event
+     * @return
+     */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         boolean isVolumeTurnPage = ReadSettingManager

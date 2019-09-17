@@ -27,12 +27,22 @@ import com.example.newbiechen.ireader.widget.animation.SlidePageAnim;
 public class PageView extends View {
 
     private final static String TAG = "BookPageWidget";
-
-    private int mViewWidth = 0; // 当前View的宽
-    private int mViewHeight = 0; // 当前View的高
-
+    /**
+     * 当前View的宽
+     */
+    private int mViewWidth = 0;
+    /**
+     * 当前View的高
+     */
+    private int mViewHeight = 0;
+    /**
+     * 手指按下坐标  判断是否移动
+     */
     private int mStartX = 0;
     private int mStartY = 0;
+    /**
+     * 是否手指滑动
+     */
     private boolean isMove = false;
     // 初始化参数
     private int mBgColor = 0xFFCEC29C;
@@ -42,7 +52,9 @@ public class PageView extends View {
     // 唤醒菜单的区域
     private RectF mCenterRect = null;
     private boolean isPrepare;
-    // 动画类
+    /**
+     * 动画类
+     */
     private PageAnimation mPageAnim;
     // 动画监听类
     private PageAnimation.OnPageChangeListener mPageAnimListener = new PageAnimation.OnPageChangeListener() {
@@ -130,6 +142,11 @@ public class PageView extends View {
         return mPageAnim.getBgBitmap();
     }
 
+    /**
+     * 音量键翻页用  翻到前一页
+     *
+     * @return
+     */
     public boolean autoPrevPage() {
         //滚动暂时不支持自动翻页
         if (mPageAnim instanceof ScrollPageAnim) {
@@ -140,6 +157,11 @@ public class PageView extends View {
         }
     }
 
+    /**
+     * 音量键翻页用   翻到后一页
+     *
+     * @return
+     */
     public boolean autoNextPage() {
         if (mPageAnim instanceof ScrollPageAnim) {
             return false;
@@ -185,6 +207,11 @@ public class PageView extends View {
         this.postInvalidate();
     }
 
+    /**
+     * 设置阅读背景色
+     *
+     * @param color
+     */
     public void setBgColor(int color) {
         mBgColor = color;
     }
@@ -278,8 +305,8 @@ public class PageView extends View {
     }
 
     /**
-     *  滑动计算   在onDraw中 每次绘制调用   而滑动 实际调用的是ScrollTo  等方法
-     *  ScrollTo 调用完毕后会 调用刷新方法   如此循环调用 需要在判断
+     * 滑动计算   在onDraw中 每次绘制调用   而滑动 实际调用的是ScrollTo  等方法
+     * ScrollTo 调用完毕后会 调用刷新方法   如此循环调用 需要在判断
      */
     @Override
     public void computeScroll() {
