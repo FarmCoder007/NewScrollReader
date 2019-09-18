@@ -26,6 +26,7 @@ import com.example.newbiechen.ireader.widget.animation.SlidePageAnim;
  */
 public class PageView extends View {
 
+
     private final static String TAG = "BookPageWidget";
     /**
      * 当前View的宽
