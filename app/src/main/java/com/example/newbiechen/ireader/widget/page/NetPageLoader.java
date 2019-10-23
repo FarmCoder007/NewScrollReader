@@ -1,9 +1,12 @@
 package com.example.newbiechen.ireader.widget.page;
 
 
+import android.util.Log;
+
 import com.example.newbiechen.ireader.model.bean.BookChapterBean;
 import com.example.newbiechen.ireader.model.bean.CollBookBean;
 import com.example.newbiechen.ireader.model.local.BookRepository;
+import com.example.newbiechen.ireader.ui.activity.ReadActivity;
 import com.example.newbiechen.ireader.utils.BookManager;
 import com.example.newbiechen.ireader.utils.Constant;
 import com.example.newbiechen.ireader.utils.FileUtils;
@@ -104,6 +107,7 @@ public class NetPageLoader extends PageLoader {
     // 装载下一章节的内容
     @Override
     boolean parseNextChapter() {
+        Log.e("auto","--------------parseNextChapter-parseNextChapter--isMainThread()"+ ReadActivity.isMainThread());
         boolean isRight = super.parseNextChapter();
 
         if (mStatus == STATUS_FINISH) {

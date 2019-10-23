@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
 import android.provider.Settings;
@@ -143,10 +144,14 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
                 case WHAT_CHAPTER:
                     mPageLoader.openChapter();
                     break;
+                default:
+                    break;
             }
         }
     };
-    // 接收电池信息和时间更新的广播
+    /**
+     * 接收电池信息和时间更新的广播
+     */
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -364,6 +369,10 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
         }
     }
 
+    public static boolean isMainThread() {
+        return Looper.getMainLooper() == Looper.myLooper();
+    }
+
     @Override
     protected void initClick() {
         super.initClick();
@@ -400,8 +409,7 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
                         if (mPageLoader.getPageStatus() == PageLoader.STATUS_LOADING
                                 || mPageLoader.getPageStatus() == PageLoader.STATUS_ERROR) {
                             mSbChapterProgress.setEnabled(false);
-                        }
-                        else {
+                        } else {
                             mSbChapterProgress.setEnabled(true);
                         }
                     }
@@ -771,6 +779,7 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
 
     /**
      * 控制音量键翻页
+     *
      * @param keyCode
      * @param event
      * @return

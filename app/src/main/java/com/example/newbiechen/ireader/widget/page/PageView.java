@@ -52,7 +52,10 @@ public class PageView extends View {
     private boolean canTouch = true;
     // 唤醒菜单的区域
     private RectF mCenterRect = null;
-    private boolean isPrepare;
+    /**
+     * pageView是否初始化完成
+     */
+    private boolean isViewPrepare;
     /**
      * 动画类
      */
@@ -98,14 +101,16 @@ public class PageView extends View {
         mViewWidth = w;
         mViewHeight = h;
 
-        isPrepare = true;
+        isViewPrepare = true;
 
         if (mPageLoader != null) {
             mPageLoader.prepareDisplay(w, h);
         }
     }
 
-    //设置翻页的模式
+    /**
+     * 设置翻页的模式
+     */
     void setPageMode(PageMode pageMode) {
         mPageMode = pageMode;
         //视图未初始化的时候，禁止调用
@@ -125,19 +130,28 @@ public class PageView extends View {
                 mPageAnim = new NonePageAnim(mViewWidth, mViewHeight, this, mPageAnimListener);
                 break;
             case SCROLL:
-                mPageAnim = new ScrollPageAnim(mViewWidth, mViewHeight, 0,
-                        mPageLoader.getMarginHeight(), this, mPageAnimListener);
+                mPageAnim = new ScrollPageAnim(mViewWidth, mViewHeight, 0, mPageLoader.getMarginHeight(), this, mPageAnimListener);
                 break;
             default:
                 mPageAnim = new SimulationPageAnim(mViewWidth, mViewHeight, this, mPageAnimListener);
         }
     }
 
+    /**
+     * 获取下一个展示内容的  空闲 的bitmap
+     *
+     * @return
+     */
     public Bitmap getNextBitmap() {
         if (mPageAnim == null) return null;
         return mPageAnim.getNextBitmap();
     }
 
+    /**
+     * 获取背景bitmap
+     *
+     * @return
+     */
     public Bitmap getBgBitmap() {
         if (mPageAnim == null) return null;
         return mPageAnim.getBgBitmap();
@@ -172,6 +186,11 @@ public class PageView extends View {
         }
     }
 
+    /**
+     * 设置除 上下滑动外    左右翻页初始点  并开始翻页
+     *
+     * @param direction
+     */
     private void startPageAnim(PageAnimation.Direction direction) {
         if (mTouchListener == null) return;
         //是否正在执行动画
@@ -281,7 +300,7 @@ public class PageView extends View {
     }
 
     /**
-     * 判断是否存在上一页
+     * 判断数据源    是否存在上一页
      *
      * @return
      */
@@ -291,15 +310,19 @@ public class PageView extends View {
     }
 
     /**
-     * 判断是否下一页存在
+     * 判断数据源    是否下一页存在
      *
      * @return
      */
     private boolean hasNextPage() {
+        Log.e("auto", "--------------------hasNextPage()");
         mTouchListener.nextPage();
         return mPageLoader.next();
     }
 
+    /**
+     * 取消翻页
+     */
     private void pageCancel() {
         mTouchListener.cancel();
         mPageLoader.pageCancel();
@@ -317,11 +340,18 @@ public class PageView extends View {
         super.computeScroll();
     }
 
-    //如果滑动状态没有停止就取消状态，重新设置Anim的触碰点
+    /**
+     * 如果滑动状态没有停止就取消状态，重新设置Anim的触碰点
+     */
     public void abortAnimation() {
         mPageAnim.abortAnim();
     }
 
+    /**
+     * 动画是否在执行
+     *
+     * @return
+     */
     public boolean isRunning() {
         if (mPageAnim == null) {
             return false;
@@ -330,15 +360,20 @@ public class PageView extends View {
     }
 
     public boolean isPrepare() {
-        return isPrepare;
+        return isViewPrepare;
     }
 
+    /**
+     * 设置触摸事件
+     *
+     * @param mTouchListener
+     */
     public void setTouchListener(TouchListener mTouchListener) {
         this.mTouchListener = mTouchListener;
     }
 
     public void drawNextPage() {
-        if (!isPrepare) return;
+        if (!isViewPrepare) return;
 
         if (mPageAnim instanceof HorizonPageAnim) {
             ((HorizonPageAnim) mPageAnim).changePage();
@@ -349,20 +384,24 @@ public class PageView extends View {
     /**
      * 绘制当前页。
      *
-     * @param isUpdate
+     * @param isUpdateBatteryOrTime 是否是更新电池 和 时间   true  只刷新电量和  时间  false  刷新全部
      */
-    public void drawCurPage(boolean isUpdate) {
-        if (!isPrepare) return;
+    public void drawCurPage(boolean isUpdateBatteryOrTime) {
+        // pageview  没有初始化完成
+        if (!isViewPrepare) return;
 
-        if (!isUpdate) {
+        if (!isUpdateBatteryOrTime) {
             if (mPageAnim instanceof ScrollPageAnim) {
                 ((ScrollPageAnim) mPageAnim).resetBitmap();
             }
         }
 
-        mPageLoader.drawPage(getNextBitmap(), isUpdate);
+        mPageLoader.drawPage(getNextBitmap(), isUpdateBatteryOrTime);
     }
 
+    /**
+     * 释放资源
+     */
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
@@ -374,7 +413,7 @@ public class PageView extends View {
     }
 
     /**
-     * 获取 PageLoader
+     * 获取 PageLoader  内容加载器  【网络和本地】
      *
      * @param collBook
      * @return
@@ -399,6 +438,9 @@ public class PageView extends View {
         return mPageLoader;
     }
 
+    /**
+     * 设置触摸监听的回调
+     */
     public interface TouchListener {
         boolean onTouch();
 

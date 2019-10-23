@@ -10,6 +10,7 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.text.TextPaint;
+import android.util.Log;
 
 import com.example.newbiechen.ireader.model.bean.BookRecordBean;
 import com.example.newbiechen.ireader.model.bean.CollBookBean;
@@ -24,7 +25,6 @@ import com.example.newbiechen.ireader.utils.StringUtils;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,7 +115,7 @@ public abstract class PageLoader {
     //应用的宽高
     private int mDisplayWidth;
     private int mDisplayHeight;
-    //间距
+    //内容左右间距
     private int mMarginWidth;
     private int mMarginHeight;
     //字体的颜色
@@ -260,7 +260,7 @@ public abstract class PageLoader {
         if (!hasNextChapter()) {
             return false;
         }
-
+        Log.e("auto","---------------skipNextChapter--");
         //判断是否达到章节的终止点
         if (parseNextChapter()) {
             mCurPage = getCurPage(0);
@@ -381,6 +381,7 @@ public abstract class PageLoader {
         // 如果当前已经显示数据
         if (isChapterListPrepare && mStatus == STATUS_FINISH) {
             // 重新计算当前页面
+            Log.e("auto","--------------setTextSize-");
             dealLoadPageList(mCurChapterPos);
 
             // 防止在最后一页，通过修改字体，以至于页面数减少导致崩溃的问题
@@ -714,19 +715,33 @@ public abstract class PageLoader {
 
     /***********************************default method***********************************************/
 
-    void drawPage(Bitmap bitmap, boolean isUpdate) {
-        drawBackground(mPageView.getBgBitmap(), isUpdate);
-        if (!isUpdate) {
+    /**
+     * 绘制阅读页
+     *
+     * @param bitmap                要绘制的位图
+     * @param isUpdateBatteryOrTime 是否是更新时间 电池
+     */
+    void drawPage(Bitmap bitmap, boolean isUpdateBatteryOrTime) {
+        // 绘制背景
+        drawBackground(mPageView.getBgBitmap(), isUpdateBatteryOrTime);
+        // 绘制文字内容
+        if (!isUpdateBatteryOrTime) {
             drawContent(bitmap);
         }
         //更新绘制
         mPageView.invalidate();
     }
 
-    private void drawBackground(Bitmap bitmap, boolean isUpdate) {
+    /**
+     * 绘制背景   标题  电池等
+     *
+     * @param bitmap                要绘制的bitmap
+     * @param isUpdateBatteryOrTime
+     */
+    private void drawBackground(Bitmap bitmap, boolean isUpdateBatteryOrTime) {
         Canvas canvas = new Canvas(bitmap);
         int tipMarginHeight = ScreenUtils.dpToPx(3);
-        if (!isUpdate) {
+        if (!isUpdateBatteryOrTime) {
             /****绘制背景****/
             canvas.drawColor(mBgColor);
 
@@ -734,11 +749,10 @@ public abstract class PageLoader {
                 /*****初始化标题的参数********/
                 //需要注意的是:绘制text的y的起始点是text的基准线的位置，而不是从text的头部的位置
                 float tipTop = tipMarginHeight - mTipPaint.getFontMetrics().top;
-                //根据状态不一样，数据不一样
+                //绘制标题 右上角          根据状态不一样，数据不一样
                 if (mStatus != STATUS_FINISH) {
                     if (isChapterListPrepare) {
-                        canvas.drawText(mChapterList.get(mCurChapterPos).getTitle()
-                                , mMarginWidth, tipTop, mTipPaint);
+                        canvas.drawText(mChapterList.get(mCurChapterPos).getTitle(), mMarginWidth, tipTop, mTipPaint);
                     }
                 } else {
                     canvas.drawText(mCurPage.title, mMarginWidth, tipTop, mTipPaint);
@@ -807,6 +821,11 @@ public abstract class PageLoader {
         canvas.drawText(time, x, y, mTipPaint);
     }
 
+    /**
+     * 绘制具体文字内容
+     *
+     * @param bitmap
+     */
     private void drawContent(Bitmap bitmap) {
         Canvas canvas = new Canvas(bitmap);
 
@@ -816,7 +835,7 @@ public abstract class PageLoader {
         /******绘制内容****/
 
         if (mStatus != STATUS_FINISH) {
-            //绘制字体
+            //绘制缺省提示
             String tip = "";
             switch (mStatus) {
                 case STATUS_LOADING:
@@ -837,6 +856,8 @@ public abstract class PageLoader {
                 case STATUS_CATEGORY_EMPTY:
                     tip = "目录列表为空";
                     break;
+                default:
+                    break;
             }
 
             //将提示语句放到正中间
@@ -847,6 +868,7 @@ public abstract class PageLoader {
             float pivotY = (mDisplayHeight - textHeight) / 2;
             canvas.drawText(tip, pivotX, pivotY, mTextPaint);
         } else {
+            // 绘制正文内容
             float top;
 
             if (mPageMode == PageMode.SCROLL) {
@@ -899,6 +921,12 @@ public abstract class PageLoader {
         }
     }
 
+    /**
+     * 准备展示相关的设置
+     *
+     * @param w 屏幕宽
+     * @param h 屏幕高
+     */
     void prepareDisplay(int w, int h) {
         // 获取PageView的宽高
         mDisplayWidth = w;
@@ -923,6 +951,7 @@ public abstract class PageLoader {
         } else {
             // 如果章节已显示，那么就重新计算页面
             if (mStatus == STATUS_FINISH) {
+                Log.e("auto","--------------prepareDisplay-");
                 dealLoadPageList(mCurChapterPos);
                 // 重新设置文章指针的位置
                 mCurPage = getCurPage(mCurPage.position);
@@ -986,10 +1015,11 @@ public abstract class PageLoader {
         if (mPrePageList != null) {
             mCurPageList = mPrePageList;
             mPrePageList = null;
-
+            Log.e("auto","--------------parsePrevChapter");
             // 回调
             chapterChangeCallback();
         } else {
+            Log.e("auto","--------------parsePrevChapter");
             dealLoadPageList(prevChapter);
         }
         return mCurPageList != null ? true : false;
@@ -1015,7 +1045,7 @@ public abstract class PageLoader {
         }
 
         if (mStatus == STATUS_FINISH) {
-            // 先查看是否存在下一页
+            // 先查看本章是否存在下一页
             TxtPage nextPage = getNextPage();
             if (nextPage != null) {
                 mCancelPage = mCurPage;
@@ -1024,12 +1054,13 @@ public abstract class PageLoader {
                 return true;
             }
         }
-
+        // 本章没有 查看是否有下一章节
         if (!hasNextChapter()) {
             return false;
         }
 
         mCancelPage = mCurPage;
+        Log.e("auto","--------------next()");
         // 解析下一章数据
         if (parseNextChapter()) {
             mCurPage = mCurPageList.get(0);
@@ -1049,6 +1080,7 @@ public abstract class PageLoader {
     }
 
     boolean parseCurChapter() {
+        Log.e("auto","--------------parseCurChapter");
         // 解析数据
         dealLoadPageList(mCurChapterPos);
         // 预加载下一页面
@@ -1075,9 +1107,11 @@ public abstract class PageLoader {
             mCurPageList = mNextPageList;
             mNextPageList = null;
             // 回调
+            Log.e("auto","--------------parseNextChapter");
             chapterChangeCallback();
         } else {
             // 处理页面解析
+            Log.e("auto","--------------parseNextChapter");
             dealLoadPageList(nextChapter);
         }
         // 预加载下一页面
@@ -1108,12 +1142,13 @@ public abstract class PageLoader {
             mCurPageList = null;
             mStatus = STATUS_ERROR;
         }
-
+        Log.e("auto","--------------dealLoadPageList");
         // 回调
         chapterChangeCallback();
     }
 
     private void chapterChangeCallback() {
+        Log.e("auto","--------------chapterChangeCallback");
         if (mPageChangeListener != null) {
             mPageChangeListener.onChapterChange(mCurChapterPos);
             mPageChangeListener.onPageCountChange(mCurPageList != null ? mCurPageList.size() : 0);
@@ -1160,7 +1195,9 @@ public abstract class PageLoader {
                 });
     }
 
-    // 取消翻页
+    /**
+     * 取消翻页
+     */
     void pageCancel() {
         if (mCurPage.position == 0 && mCurChapterPos > mLastChapterPos) { // 加载到下一章取消了
             if (mPrePageList != null) {
@@ -1179,6 +1216,7 @@ public abstract class PageLoader {
             if (mNextPageList != null) {
                 cancelPreChapter();
             } else {
+                Log.e("auto","--------------pageCancel");
                 if (parseNextChapter()) {
                     mCurPage = mCurPageList.get(0);
                 } else {
@@ -1199,7 +1237,7 @@ public abstract class PageLoader {
         mNextPageList = mCurPageList;
         mCurPageList = mPrePageList;
         mPrePageList = null;
-
+        Log.e("auto","--------------cancelNextChapter");
         chapterChangeCallback();
 
         mCurPage = getPrevLastPage();
@@ -1215,7 +1253,7 @@ public abstract class PageLoader {
         mPrePageList = mCurPageList;
         mCurPageList = mNextPageList;
         mNextPageList = null;
-
+        Log.e("auto","--------------cancelPreChapter");
         chapterChangeCallback();
 
         mCurPage = getCurPage(0);
