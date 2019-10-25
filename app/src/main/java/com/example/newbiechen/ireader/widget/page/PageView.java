@@ -137,8 +137,18 @@ public class PageView extends View {
         }
     }
 
+    public void setAutoRead(boolean open) {
+        if (mPageAnim instanceof NonePageAnim) {
+            if (open) {
+                ((NonePageAnim) mPageAnim).autoRead();
+            } else {
+                ((NonePageAnim) mPageAnim).cancelAuto();
+            }
+        }
+    }
+
     /**
-     * 获取下一个展示内容的  空闲 的bitmap
+     * 绘制时获取下一个展示内容的  空闲 的bitmap
      *
      * @return
      */
@@ -238,7 +248,7 @@ public class PageView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        Log.e("PageView", "-----------------onDraw");
+//        Log.e("PageView", "-----------------onDraw");
 
         //绘制背景
         canvas.drawColor(mBgColor);
@@ -257,11 +267,16 @@ public class PageView extends View {
         int y = (int) event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                if (mPageAnim instanceof  NonePageAnim &&((NonePageAnim) mPageAnim).isOpenAuto) {
+                    mPageAnim.onTouchEvent(event);
+                    return true;
+                }
+
                 mStartX = x;
                 mStartY = y;
                 isMove = false;
                 canTouch = mTouchListener.onTouch();
-                mPageAnim.onTouchEvent(event);
+
                 break;
             case MotionEvent.ACTION_MOVE:
                 // 判断是否大于最小滑动值。
@@ -270,8 +285,8 @@ public class PageView extends View {
                     isMove = Math.abs(mStartX - event.getX()) > slop || Math.abs(mStartY - event.getY()) > slop;
                 }
 
-                // 如果滑动了，则进行翻页。
-                if (isMove) {
+                // 如果滑动了，则进行翻页。    无翻页情况 滑动不处理
+                if (isMove && (mPageAnim instanceof NonePageAnim && ((NonePageAnim) mPageAnim).isOpenAuto)) {
                     mPageAnim.onTouchEvent(event);
                 }
                 break;
@@ -291,7 +306,11 @@ public class PageView extends View {
                         return true;
                     }
                 }
-                mPageAnim.onTouchEvent(event);
+                if(isMove && (mPageAnim instanceof NonePageAnim && !((NonePageAnim) mPageAnim).isOpenAuto)){
+                    // 无动画情况下  未开自动阅读  不处理
+                } else {
+                    mPageAnim.onTouchEvent(event);
+                }
                 break;
             default:
                 break;
@@ -334,7 +353,7 @@ public class PageView extends View {
      */
     @Override
     public void computeScroll() {
-        Log.e("ScrollAnimation", "-----------------computeScroll");
+//        Log.e("ScrollAnimation", "-----------------computeScroll");
         //进行滑动
         mPageAnim.scrollAnim();
         super.computeScroll();
@@ -372,7 +391,11 @@ public class PageView extends View {
         this.mTouchListener = mTouchListener;
     }
 
+    /**
+     * 调用绘制方法前  下一页数据源已经赋值给mCurPage
+     */
     public void drawNextPage() {
+        Log.e(TAG, "-----------------drawNextPage 绘制下一页bitmap");
         if (!isViewPrepare) return;
 
         if (mPageAnim instanceof HorizonPageAnim) {
@@ -395,7 +418,7 @@ public class PageView extends View {
                 ((ScrollPageAnim) mPageAnim).resetBitmap();
             }
         }
-
+        Log.e(TAG, "-----------------drawCurPage 绘制当前页bitmap");
         mPageLoader.drawPage(getNextBitmap(), isUpdateBatteryOrTime);
     }
 

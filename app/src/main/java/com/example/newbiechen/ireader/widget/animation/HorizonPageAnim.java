@@ -44,9 +44,10 @@ public abstract class HorizonPageAnim extends PageAnimation {
     }
 
     /**
-     * 转换页面，在显示下一章的时候，必须首先调用此方法
+     * 交换bitmap，在显示下一章的时候，必须首先调用此方法
      */
     public void changePage() {
+        Log.e(TAG, "----------------绘制下一页前 交换bitmap");
         Bitmap bitmap = mCurBitmap;
         mCurBitmap = mNextBitmap;
         mNextBitmap = bitmap;
@@ -221,11 +222,21 @@ public abstract class HorizonPageAnim extends PageAnimation {
         }
     }
 
+    /**
+     * 获取背景bitmap
+     *
+     * @return
+     */
     @Override
     public Bitmap getBgBitmap() {
         return mNextBitmap;
     }
 
+    /**
+     * 获取下一页 bitmap
+     *
+     * @return
+     */
     @Override
     public Bitmap getNextBitmap() {
         return mNextBitmap;

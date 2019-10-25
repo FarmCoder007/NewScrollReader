@@ -84,6 +84,7 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
 
     private static final int WHAT_CATEGORY = 1;
     private static final int WHAT_CHAPTER = 2;
+    private boolean isOpenAuto;
 
 
     @BindView(R.id.read_dl_slide)
@@ -118,6 +119,8 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
         TextView mTvDownload;*/
     @BindView(R.id.read_tv_setting)
     TextView mTvSetting;
+    @BindView(R.id.read_autoread)
+    TextView autoRead;
     /***************left slide*******************************/
     @BindView(R.id.read_iv_category)
     ListView mLvCategory;
@@ -501,6 +504,14 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
                 }
         );
 
+        autoRead.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPageLoader.setAutoRead(!isOpenAuto);
+                toggleMenu(false);
+            }
+        });
+
         mTvPreChapter.setOnClickListener(
                 (v) -> {
                     if (mPageLoader.skipPreChapter()) {
@@ -767,12 +778,14 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
 
     @Override
     protected void onDestroy() {
+        if (mPvPage != null) {
+            mPvPage.setAutoRead(false);
+        }
         super.onDestroy();
         unregisterReceiver(mReceiver);
 
         mHandler.removeMessages(WHAT_CATEGORY);
         mHandler.removeMessages(WHAT_CHAPTER);
-
         mPageLoader.closeBook();
         mPageLoader = null;
     }

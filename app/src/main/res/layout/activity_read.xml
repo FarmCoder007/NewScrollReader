@@ -155,6 +155,12 @@
                     style="@style/NB.Theme.TextAppearance.Read.BottomMenu.Button"
                     android:drawableTop="@drawable/ic_read_menu_font"
                     android:text="@string/nb.read.setting" />
+
+                <TextView
+                    android:id="@+id/read_autoread"
+                    style="@style/NB.Theme.TextAppearance.Read.BottomMenu.Button"
+                    android:drawableTop="@drawable/ic_read_menu_font"
+                    android:text="自动阅读" />
             </LinearLayout>
         </LinearLayout>
     </RelativeLayout>
