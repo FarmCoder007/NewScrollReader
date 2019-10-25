@@ -31,6 +31,7 @@ import retrofit2.Retrofit;
 
 /**
  * Created by newbiechen on 17-4-20.
+ *  网络请求工具
  */
 
 public class RemoteRepository {

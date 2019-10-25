@@ -35,6 +35,10 @@ public class ReadPresenter extends RxPresenter<ReadContract.View>
 
     private Subscription mChapterSub;
 
+    /**
+     *  从网络加载章节列表
+     * @param bookId
+     */
     @Override
     public void loadCategory(String bookId) {
         Disposable disposable = RemoteRepository.getInstance()
@@ -63,6 +67,11 @@ public class ReadPresenter extends RxPresenter<ReadContract.View>
         addDisposable(disposable);
     }
 
+    /**
+     *  进行网络请求加载  章节内容
+     * @param bookId  本书籍id
+     * @param bookChapters  要请求的章节列表
+     */
     @Override
     public void loadChapter(String bookId, List<TxtChapter> bookChapters) {
         int size = bookChapters.size();
@@ -71,7 +80,7 @@ public class ReadPresenter extends RxPresenter<ReadContract.View>
         if (mChapterSub != null) {
             mChapterSub.cancel();
         }
-
+        // 网络请求集合里
         List<Single<ChapterInfoBean>> chapterInfos = new ArrayList<>(bookChapters.size());
         ArrayDeque<String> titles = new ArrayDeque<>(bookChapters.size());
 

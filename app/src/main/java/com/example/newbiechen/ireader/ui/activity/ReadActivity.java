@@ -122,6 +122,9 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
     @BindView(R.id.read_autoread)
     TextView autoRead;
     /***************left slide*******************************/
+    /**
+     * 侧滑栏章节列表
+     */
     @BindView(R.id.read_iv_category)
     ListView mLvCategory;
     /*****************view******************/
@@ -382,20 +385,31 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
 
         mPageLoader.setOnPageChangeListener(
                 new PageLoader.OnPageChangeListener() {
-
+                    /**
+                     * 作用：章节切换的时候进行回调
+                     */
                     @Override
                     public void onChapterChange(int pos) {
                         mCategoryAdapter.setChapter(pos);
                     }
 
+                    /**
+                     *  传入要加载的章节列表集合   请求章节内容
+                     * @param requestChapters:需要下载的章节列表
+                     */
                     @Override
                     public void requestChapters(List<TxtChapter> requestChapters) {
                         mPresenter.loadChapter(mBookId, requestChapters);
+                        // 通知选中章节
                         mHandler.sendEmptyMessage(WHAT_CATEGORY);
                         //隐藏提示
                         mTvPageTip.setVisibility(GONE);
                     }
 
+                    /**
+                     *  章节目录加载完成更新ui
+                     * @param chapters：返回章节目录
+                     */
                     @Override
                     public void onCategoryFinish(List<TxtChapter> chapters) {
                         for (TxtChapter chapter : chapters) {
@@ -404,6 +418,10 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
                         mCategoryAdapter.refreshItems(chapters);
                     }
 
+                    /**
+                     *  当前展示章节   页面数量变化 回调   【切换章节 一般都会回调】
+                     * @param count:页面的数量
+                     */
                     @Override
                     public void onPageCountChange(int count) {
                         mSbChapterProgress.setMax(Math.max(0, count - 1));
@@ -512,6 +530,9 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
             }
         });
 
+        /**
+         *  点击上一章
+         */
         mTvPreChapter.setOnClickListener(
                 (v) -> {
                     if (mPageLoader.skipPreChapter()) {
@@ -520,6 +541,9 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
                 }
         );
 
+        /**
+         *  点击下一章
+         */
         mTvNextChapter.setOnClickListener(
                 (v) -> {
                     if (mPageLoader.skipNextChapter()) {
@@ -630,6 +654,9 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
         mBottomOutAnim.setDuration(200);
     }
 
+    /**
+     *  attachPresenter  后 拉取章节列表数据  【数据库还是网络】
+     */
     @Override
     protected void processLogic() {
         super.processLogic();
@@ -669,6 +696,10 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
 
     }
 
+    /**
+     *  网络章节列表加载完毕  数据回调
+     * @param bookChapters
+     */
     @Override
     public void showCategory(List<BookChapterBean> bookChapters) {
         mPageLoader.getCollBook().setBookChapters(bookChapters);
@@ -676,20 +707,26 @@ public class ReadActivity extends BaseMVPActivity<ReadContract.Presenter>
 
         // 如果是目录更新的情况，那么就需要存储更新数据
         if (mCollBook.isUpdate() && isCollected) {
-            BookRepository.getInstance()
-                    .saveBookChaptersWithAsync(bookChapters);
+            BookRepository.getInstance().saveBookChaptersWithAsync(bookChapters);
         }
     }
 
+    /**
+     *  章节内容加载完成后  刷新章节列表状态
+     */
     @Override
     public void finishChapter() {
         if (mPageLoader.getPageStatus() == PageLoader.STATUS_LOADING) {
+            // 通知打开当前章节内容
             mHandler.sendEmptyMessage(WHAT_CHAPTER);
         }
         // 当完成章节的时候，刷新列表
         mCategoryAdapter.notifyDataSetChanged();
     }
 
+    /**
+     * 章节内容下载失败
+     */
     @Override
     public void errorChapter() {
         if (mPageLoader.getPageStatus() == PageLoader.STATUS_LOADING) {

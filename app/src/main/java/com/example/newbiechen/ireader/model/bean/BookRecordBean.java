@@ -6,6 +6,7 @@ import org.greenrobot.greendao.annotation.Generated;
 
 /**
  * Created by newbiechen on 17-5-20.
+ *  阅读标签
  */
 @Entity
 public class BookRecordBean{

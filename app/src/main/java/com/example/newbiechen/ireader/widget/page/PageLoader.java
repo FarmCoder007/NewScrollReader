@@ -56,23 +56,37 @@ public abstract class PageLoader {
     private static final int DEFAULT_TIP_SIZE = 12;
     private static final int EXTRA_TITLE_SIZE = 4;
 
-    // 当前章节列表
+    /**
+     * 当前书籍章节列表
+     */
     protected List<TxtChapter> mChapterList;
-    // 书本对象
+    /**
+     * 书本对象
+     */
     protected CollBookBean mCollBook;
-    // page 变化 监听器
+    /**
+     * page 变化 监听器
+     */
     protected OnPageChangeListener mPageChangeListener;
 
     private Context mContext;
     // 页面显示类
     private PageView mPageView;
-    // 当前显示的页
+    /**
+     * 当前显示绘制页面的 数据源
+     */
     private TxtPage mCurPage;
-    // 上一章的页面列表缓存
+    /**
+     * 上一章的页面数据源列表    排版后的
+     */
     private List<TxtPage> mPrePageList;
-    // 当前章节的页面列表
+    /**
+     * 当前章节的页面列表
+     */
     private List<TxtPage> mCurPageTxtList;
-    // 下一章的页面列表缓存
+    /**
+     * 下一章的页面列表缓存
+     */
     private List<TxtPage> mNextPageTxtList;
 
     // 绘制电池的画笔
@@ -89,7 +103,9 @@ public abstract class PageLoader {
     private ReadSettingManager mSettingManager;
     // 被遮盖的页，或者认为被取消显示的页
     private TxtPage mCancelPage;
-    // 存储阅读记录类
+    /**
+     * 书签类
+     */
     private BookRecordBean mBookRecord;
 
     private Disposable mPreLoadDisp;
@@ -100,9 +116,14 @@ public abstract class PageLoader {
     // 判断章节列表是否加载完成
     protected boolean isChapterListPrepare;
 
-    // 是否打开过章节
+    /**
+     * 是否打开过章节
+     */
     private boolean isChapterOpen;
     private boolean isFirstOpen = true;
+    /**
+     *  书籍是否关闭
+     */
     private boolean isClose;
     // 页面的翻页效果模式
     private PageMode mPageMode;
@@ -137,7 +158,7 @@ public abstract class PageLoader {
     //当前页面的背景
     private int mBgColor;
 
-    // 当前章
+    // 当前章  在章节列表里的下标
     protected int mCurChapterPos = 0;
     //上一章的记录
     private int mLastChapterPos = 0;
@@ -155,10 +176,13 @@ public abstract class PageLoader {
         initPaint();
         // 初始化PageView
         initPageView();
-        // 初始化书籍
+        // 初始化书籍  从书签里取进度
         prepareBook();
     }
 
+    /**
+     * 取偏好设置里的数据 初始化
+     */
     private void initData() {
         // 获取配置管理器
         mSettingManager = ReadSettingManager.getInstance();
@@ -189,6 +213,9 @@ public abstract class PageLoader {
         mTitlePara = mTitleSize;
     }
 
+    /**
+     * 初始化画笔
+     */
     private void initPaint() {
         // 绘制提示的画笔
         mTipPaint = new Paint();
@@ -225,6 +252,9 @@ public abstract class PageLoader {
         setNightMode(mSettingManager.isNightMode());
     }
 
+    /**
+     * 将偏好设置  给pageView
+     */
     private void initPageView() {
         //配置参数
         mPageView.setPageMode(mPageMode);
@@ -233,16 +263,16 @@ public abstract class PageLoader {
 
     /****************************** public method***************************/
     /**
-     * 跳转到上一章
+     * 底部工具栏  点击 上一章  跳转到上一章
      *
      * @return
      */
     public boolean skipPreChapter() {
+        // 是否含有上一章
         if (!hasPrevChapter()) {
             return false;
         }
-
-        // 载入上一章。
+        // 解析装载  上一章数据。完成后 显示绘制
         if (parsePrevChapter()) {
             mCurPage = getCurPage(0);
         } else {
@@ -253,7 +283,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * 跳转到下一章
+     * 底部工具栏点击下一章  跳转到下一章
      *
      * @return
      */
@@ -273,7 +303,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * 跳转到指定章节
+     * 章节列表里点击    跳转到指定章节
      *
      * @param pos:从 0 开始。
      */
@@ -295,7 +325,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * 跳转到指定的页
+     * 底部滑动  跳转到本章 指定的页
      *
      * @param pos
      */
@@ -361,11 +391,12 @@ public abstract class PageLoader {
     }
 
     /**
-     * 设置文字相关参数
+     * 更改文字大小  重新排版绘制
      *
      * @param textSize
      */
     public void setTextSize(int textSize) {
+        Log.e(TAG, "--------------setTextSize-");
         // 设置文字相关参数
         setUpTextParams(textSize);
 
@@ -379,17 +410,15 @@ public abstract class PageLoader {
         mPrePageList = null;
         mNextPageTxtList = null;
 
-        // 如果当前已经显示数据
+        // 如果章节列表数据准备好    章节展示过了 切换字体还得排版
         if (isChapterListPrepare && mStatus == STATUS_FINISH) {
-            // 重新计算当前页面
-            Log.e("auto", "--------------setTextSize-");
+            // 重新计算当前页面  重新排版
             dealLoadPageList(mCurChapterPos);
 
             // 防止在最后一页，通过修改字体，以至于页面数减少导致崩溃的问题
             if (mCurPage.position >= mCurPageTxtList.size()) {
                 mCurPage.position = mCurPageTxtList.size() - 1;
             }
-
             // 重新获取指定页面
             mCurPage = mCurPageTxtList.get(mCurPage.position);
         }
@@ -461,11 +490,12 @@ public abstract class PageLoader {
 
     /**
      * 设置自动阅读
+     *
      * @param isOpen
      */
     public void setAutoRead(boolean isOpen) {
         // 其他阅读模式下  只能换到 无动画模式才能启动  自动阅读
-        if(mPageMode != PageMode.NONE){
+        if (mPageMode != PageMode.NONE) {
             mPageMode = PageMode.NONE;
             mPageView.setPageMode(mPageMode);
             mSettingManager.setPageMode(mPageMode);
@@ -536,7 +566,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * 获取当前页的页码
+     * 获取本章  当前页的页码
      *
      * @return
      */
@@ -545,7 +575,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * 获取当前章节的章节位置
+     * 获取当前章节的章节位置 本章章节列表下标
      *
      * @return
      */
@@ -563,7 +593,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * 保存阅读记录
+     * 保存书签
      */
     public void saveRecord() {
 
@@ -579,34 +609,30 @@ public abstract class PageLoader {
         } else {
             mBookRecord.setPagePos(0);
         }
-
         //存储到数据库
-        BookRepository.getInstance()
-                .saveBookRecord(mBookRecord);
+        BookRepository.getInstance().saveBookRecord(mBookRecord);
     }
 
     /**
-     * 初始化书籍
+     * 从书签里取  初始化书籍  书签
      */
     private void prepareBook() {
-        mBookRecord = BookRepository.getInstance()
-                .getBookRecord(mCollBook.get_id());
-
+        mBookRecord = BookRepository.getInstance().getBookRecord(mCollBook.get_id());
         if (mBookRecord == null) {
             mBookRecord = new BookRecordBean();
         }
-
         mCurChapterPos = mBookRecord.getChapter();
         mLastChapterPos = mCurChapterPos;
     }
 
     /**
-     * 打开指定章节
+     * 打开当前章节内容
      */
     public void openChapter() {
+        // 是否是第一次打开
         isFirstOpen = false;
-
-        if (!mPageView.isPrepare()) {
+        // pageView是否初始化完成
+        if (!mPageView.isPageViewPrepare()) {
             return;
         }
 
@@ -623,9 +649,9 @@ public abstract class PageLoader {
             mPageView.drawCurPage(false);
             return;
         }
-
+        // 章节 数据 load成功后  开始解析 排版数据   赋值 本章待绘制的页面列表
         if (parseCurChapter()) {
-            // 如果章节从未打开
+            // 如果章节从未打开  打开章节   【加 标记 第一次打开取书签】
             if (!isChapterOpen) {
                 int position = mBookRecord.getPagePos();
 
@@ -638,15 +664,19 @@ public abstract class PageLoader {
                 // 切换状态
                 isChapterOpen = true;
             } else {
+                // 不是第一次取第一页
                 mCurPage = getCurPage(0);
             }
         } else {
             mCurPage = new TxtPage();
         }
-
+        // 确定了当前page数据  开始绘制
         mPageView.drawCurPage(false);
     }
 
+    /**
+     * 章节内容下载失败
+     */
     public void chapterError() {
         //加载错误
         mStatus = STATUS_ERROR;
@@ -654,7 +684,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * 关闭书本
+     * 关闭书本  释放资源
      */
     public void closeBook() {
         isChapterListPrepare = false;
@@ -675,22 +705,35 @@ public abstract class PageLoader {
         mCurPage = null;
     }
 
+    /**
+     *  清空列表数据
+     * @param list
+     */
     private void clearList(List list) {
         if (list != null) {
             list.clear();
         }
     }
 
+    /**
+     *  退出界面  会关闭书籍  检测书籍是否关闭
+     * @return
+     */
     public boolean isClose() {
         return isClose;
     }
 
+    /**
+     * 本书是否打开过章节   第一次打开取 书签  非第一次取第一页
+     */
     public boolean isChapterOpen() {
         return isChapterOpen;
     }
 
     /**
-     * 加载页面列表
+     * 加载本章节排版后 的    文字页面列表
+     * 1 排版切换后的当前章节
+     * 2 预排版下一章
      *
      * @param chapterPos:章节序号
      * @return
@@ -698,21 +741,21 @@ public abstract class PageLoader {
     private List<TxtPage> loadPageList(int chapterPos) throws Exception {
         // 获取章节
         TxtChapter chapter = mChapterList.get(chapterPos);
-        // 判断章节是否存在
+        // 判断本章节是否缓存到本地过
         if (!hasChapterData(chapter)) {
             return null;
         }
-        // 获取章节的文本流
+        // 先把章节内容缓存到本地文件    再从文件 读取返回流
         BufferedReader reader = getChapterReader(chapter);
+        // 将流解析成本章节的文件列表
         List<TxtPage> chapters = loadPages(chapter, reader);
-
         return chapters;
     }
 
     /*******************************abstract method***************************************/
 
     /**
-     * 刷新章节列表
+     * 章节列表 本地或者网络  加载完成后   刷新章节列表
      */
     public abstract void refreshChapterList();
 
@@ -752,7 +795,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * 绘制背景   标题  电池等
+     * 绘制背景   标题  电池到指定bitmap上
      *
      * @param bitmap                要绘制的bitmap
      * @param isUpdateBatteryOrTime
@@ -951,6 +994,7 @@ public abstract class PageLoader {
      * @param h 屏幕高
      */
     void prepareDisplay(int w, int h) {
+        Log.e(TAG, "--------------prepareDisplay-");
         // 获取PageView的宽高
         mDisplayWidth = w;
         mDisplayHeight = h;
@@ -974,7 +1018,7 @@ public abstract class PageLoader {
         } else {
             // 如果章节已显示，那么就重新计算页面
             if (mStatus == STATUS_FINISH) {
-                Log.e("auto", "--------------prepareDisplay-");
+                // 显示区域变了  重新排版
                 dealLoadPageList(mCurChapterPos);
                 // 重新设置文章指针的位置
                 mCurPage = getCurPage(mCurPage.position);
@@ -984,7 +1028,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * 翻阅上一页
+     * 根据数据源判断是否有上一页  并翻到上一页  绘制上一页
      *
      * @return
      */
@@ -1010,6 +1054,7 @@ public abstract class PageLoader {
         }
 
         mCancelPage = mCurPage;
+        // 本章没有上一页  加载上一章  绘制上一章最后一页
         if (parsePrevChapter()) {
             mCurPage = getPrevLastPage();
         } else {
@@ -1020,34 +1065,40 @@ public abstract class PageLoader {
     }
 
     /**
-     * 解析上一章数据
+     * 解析上一章数据 即将绘制的上一章文字界面  【1 点击上一章 2 翻页翻到上一章 3取消翻页时】
      *
      * @return:数据是否解析成功
      */
     boolean parsePrevChapter() {
+        // 往前翻时   【处理当前  和下一章的逻辑  交换数据集】
         // 加载上一章数据
         int prevChapter = mCurChapterPos - 1;
-
         mLastChapterPos = mCurChapterPos;
         mCurChapterPos = prevChapter;
-
-        // 当前章缓存为下一章
+        // 当前章 切换成前一章   当前章列表   存为下一章列表数据
         mNextPageTxtList = mCurPageTxtList;
 
-        // 判断是否具有上一章缓存
+
+        // 判断是否具有上一章列表页是否处理完成   未完成 先排版
         if (mPrePageList != null) {
+            // 上一章文字界面列表排版完成   直接回调 显示
             mCurPageTxtList = mPrePageList;
             mPrePageList = null;
-            Log.e("auto", "--------------parsePrevChapter");
-            // 回调
+            // 章节切换回调
             chapterChangeCallback();
         } else {
-            Log.e("auto", "--------------parsePrevChapter");
+            // 前一章节未完成排版   先排版
             dealLoadPageList(prevChapter);
         }
+        Log.e(TAG, "--------------parsePrevChapter 解析上一章数据");
         return mCurPageTxtList != null ? true : false;
     }
 
+    /**
+     * 根据章节下标判断是否含有上一章节
+     *
+     * @return
+     */
     private boolean hasPrevChapter() {
         //判断是否上一章节为空
         if (mCurChapterPos - 1 < 0) {
@@ -1094,6 +1145,11 @@ public abstract class PageLoader {
         return true;
     }
 
+    /**
+     * 根据章节下标判断是否含有下一章节
+     *
+     * @return
+     */
     private boolean hasNextChapter() {
         // 判断是否到达目录最后一章
         if (mCurChapterPos + 1 >= mChapterList.size()) {
@@ -1102,11 +1158,16 @@ public abstract class PageLoader {
         return true;
     }
 
+    /**
+     * 章节加载完成后  开始解析数据  解析当前章节
+     *
+     * @return
+     */
     boolean parseCurChapter() {
         Log.e("auto", "--------------parseCurChapter");
-        // 解析数据
+        // 解析数据  排版  解析成 文字列表后 通知展示
         dealLoadPageList(mCurChapterPos);
-        // 预加载下一页面
+        // 预排版下一章
         preLoadNextChapter();
         return mCurPageTxtList != null ? true : false;
     }
@@ -1117,35 +1178,46 @@ public abstract class PageLoader {
      * @return:返回解析成功还是失败
      */
     boolean parseNextChapter() {
+        // 处理翻到下一章后的数据源切换
         int nextChapter = mCurChapterPos + 1;
-
         mLastChapterPos = mCurChapterPos;
         mCurChapterPos = nextChapter;
-
         // 将当前章的页面列表，作为上一章缓存
         mPrePageList = mCurPageTxtList;
 
-        // 是否下一章数据已经预加载了
+
+        // 是否下一章数据已经预加载了 判断完成
         if (mNextPageTxtList != null) {
             mCurPageTxtList = mNextPageTxtList;
             mNextPageTxtList = null;
-            // 回调
-            Log.e("auto", "--------------parseNextChapter");
+            // 回调章节切换了
             chapterChangeCallback();
         } else {
-            // 处理页面解析
-            Log.e("auto", "--------------parseNextChapter");
+            // 未排版解析 先排版解析
             dealLoadPageList(nextChapter);
         }
-        // 预加载下一页面
+        // 预排版下一章
         preLoadNextChapter();
+        Log.e("auto", "--------------parseNextChapter");
         return mCurPageTxtList != null ? true : false;
     }
 
+    /**
+     * 解析指定章节 数据 【包括排版】
+     * 1 字体变化
+     * 2 界面大小变化
+     * 3 切换上一章节时 上一章未排版 得先排版
+     * 4 当前章节数据load完成 解析当前章节数据
+     * 5 同3翻到下一章了
+     *
+     * @param chapterPos
+     */
     private void dealLoadPageList(int chapterPos) {
         try {
+            // 排版 返回本章 文字列表页
             mCurPageTxtList = loadPageList(chapterPos);
             if (mCurPageTxtList != null) {
+                // 排版完成  数据为空
                 if (mCurPageTxtList.isEmpty()) {
                     mStatus = STATUS_EMPTY;
 
@@ -1154,37 +1226,43 @@ public abstract class PageLoader {
                     page.lines = new ArrayList<>(1);
                     mCurPageTxtList.add(page);
                 } else {
+                    // 排版完成后  将总状态 设置已完成
                     mStatus = STATUS_FINISH;
                 }
             } else {
+                // 排版未完成  得重新下载章节数据
                 mStatus = STATUS_LOADING;
             }
         } catch (Exception e) {
             e.printStackTrace();
-
+            // 排版报错了
             mCurPageTxtList = null;
             mStatus = STATUS_ERROR;
         }
-        Log.e("auto", "--------------dealLoadPageList");
+        Log.e(TAG, "--------------dealLoadPageList  处理章节排版");
         // 回调
         chapterChangeCallback();
     }
 
+    /**
+     * 切换章节时 回调  更新章节列表ui  和 底部页码ui
+     */
     private void chapterChangeCallback() {
-        Log.e("auto", "--------------chapterChangeCallback");
+        Log.e(TAG, "--------------chapterChangeCallback章节切换 回调了");
         if (mPageChangeListener != null) {
             mPageChangeListener.onChapterChange(mCurChapterPos);
             mPageChangeListener.onPageCountChange(mCurPageTxtList != null ? mCurPageTxtList.size() : 0);
         }
     }
 
-    // 预加载下一章
+    /**
+     * 预排版下一章数据  赋值给mNextPageTxtList  下一章页面列表
+     */
     private void preLoadNextChapter() {
         int nextChapter = mCurChapterPos + 1;
 
         // 如果不存在下一章，且下一章没有数据，则不进行加载。
-        if (!hasNextChapter()
-                || !hasChapterData(mChapterList.get(nextChapter))) {
+        if (!hasNextChapter() || !hasChapterData(mChapterList.get(nextChapter))) {
             return;
         }
 
@@ -1285,7 +1363,7 @@ public abstract class PageLoader {
 
     /**************************************private method********************************************/
     /**
-     * 将章节数据，解析成页面列表
+     * 将本章节数据流，解析成本章节  页面列表  【排版】
      *
      * @param chapter：章节信息
      * @param br：章节的文本流
@@ -1294,12 +1372,15 @@ public abstract class PageLoader {
     private List<TxtPage> loadPages(TxtChapter chapter, BufferedReader br) {
         //生成的页面
         List<TxtPage> pages = new ArrayList<>();
-        //使用流的方式加载
+        //使用流的方式加载 本章总文字行数
         List<String> lines = new ArrayList<>();
+        // 可显示文字的高度  用于排版
         int rHeight = mVisibleHeight;
         int titleLinesCount = 0;
-        boolean showTitle = true; // 是否展示标题
-        String paragraph = chapter.getTitle();//默认展示标题
+        // 是否展示标题
+        boolean showTitle = true;
+        //默认展示标题
+        String paragraph = chapter.getTitle();
         try {
             while (showTitle || (paragraph = br.readLine()) != null) {
                 paragraph = StringUtils.convertCC(paragraph, mContext);
@@ -1399,7 +1480,7 @@ public abstract class PageLoader {
 
 
     /**
-     * @return:获取初始显示的页面
+     * 获取当前章节  指定下标页码的 页面
      */
     private TxtPage getCurPage(int pos) {
         if (mPageChangeListener != null) {
@@ -1409,7 +1490,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * @return:获取上一个页面
+     * 获取本章  上一个页面
      */
     private TxtPage getPrevPage() {
         int pos = mCurPage.position - 1;
@@ -1423,7 +1504,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * 获取下一页 页面 的  数据   [TxtPage 一页的数据源]
+     * 获取本章  下一页 页面 的  数据   [TxtPage 一页的数据源]
      */
     private TxtPage getNextPage() {
         int pos = mCurPage.position + 1;
@@ -1438,7 +1519,7 @@ public abstract class PageLoader {
     }
 
     /**
-     * @return:获取上一个章节的最后一页
+     * 获取上一个章节的最后一页
      */
     private TxtPage getPrevLastPage() {
         int pos = mCurPageTxtList.size() - 1;

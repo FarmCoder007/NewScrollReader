@@ -341,6 +341,9 @@ public class LocalPageLoader extends PageLoader {
         }
     }
 
+    /**
+     *  刷新章节列表数据  回调更新ui
+     */
     @Override
     public void refreshChapterList() {
         // 对于文件是否存在，或者为空的判断，不作处理。 ==> 在文件打开前处理过了。
@@ -363,7 +366,7 @@ public class LocalPageLoader extends PageLoader {
                 mPageChangeListener.onCategoryFinish(mChapterList);
             }
 
-            // 加载并显示当前章节
+            // 章节列表加载完成后    加载并显示当前章节
             openChapter();
 
             return;

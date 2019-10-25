@@ -62,16 +62,27 @@ public class PageView extends View {
     private PageAnimation mPageAnim;
     // 动画监听类
     private PageAnimation.OnPageChangeListener mPageAnimListener = new PageAnimation.OnPageChangeListener() {
+        /**
+         *  从数据源开始判断是否含有上一页  并切换到上一页 进行绘制
+         * @return
+         */
         @Override
         public boolean hasPrev() {
             return PageView.this.hasPrevPage();
         }
 
+        /**
+         *  翻到下一页
+         * @return
+         */
         @Override
         public boolean hasNext() {
             return PageView.this.hasNextPage();
         }
 
+        /**
+         *  此方法可以取消翻页
+         */
         @Override
         public void pageCancel() {
             PageView.this.pageCancel();
@@ -319,7 +330,7 @@ public class PageView extends View {
     }
 
     /**
-     * 判断数据源    是否存在上一页
+     * 判断数据源    是否存在上一页  存在的话直接切换 并绘制
      *
      * @return
      */
@@ -378,7 +389,11 @@ public class PageView extends View {
         return mPageAnim.isRunning();
     }
 
-    public boolean isPrepare() {
+    /**
+     * pageview 是否初始化完成
+     * @return
+     */
+    public boolean isPageViewPrepare() {
         return isViewPrepare;
     }
 
@@ -410,6 +425,7 @@ public class PageView extends View {
      * @param isUpdateBatteryOrTime 是否是更新电池 和 时间   true  只刷新电量和  时间  false  刷新全部
      */
     public void drawCurPage(boolean isUpdateBatteryOrTime) {
+        Log.e(TAG, "-----------------drawCurPage 绘制当前页bitmap");
         // pageview  没有初始化完成
         if (!isViewPrepare) return;
 
@@ -418,7 +434,6 @@ public class PageView extends View {
                 ((ScrollPageAnim) mPageAnim).resetBitmap();
             }
         }
-        Log.e(TAG, "-----------------drawCurPage 绘制当前页bitmap");
         mPageLoader.drawPage(getNextBitmap(), isUpdateBatteryOrTime);
     }
 

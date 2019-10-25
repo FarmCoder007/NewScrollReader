@@ -12,6 +12,7 @@ import com.example.newbiechen.ireader.widget.page.TxtChapter;
 
 /**
  * Created by newbiechen on 17-5-16.
+ * 章节列表  viewHolder
  */
 
 public class CategoryHolder extends ViewHolderImpl<TxtChapter> {

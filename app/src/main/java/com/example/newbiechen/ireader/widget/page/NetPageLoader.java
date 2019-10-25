@@ -44,6 +44,9 @@ public class NetPageLoader extends PageLoader {
         return txtChapters;
     }
 
+    /**
+     * 章节列表数据回调   刷新
+     */
     @Override
     public void refreshChapterList() {
         if (mCollBook.getBookChapters() == null) return;
@@ -64,6 +67,13 @@ public class NetPageLoader extends PageLoader {
         }
     }
 
+    /**
+     * 获取指定章节    章节内容返回流文件
+     *
+     * @param chapter
+     * @return
+     * @throws Exception
+     */
     @Override
     protected BufferedReader getChapterReader(TxtChapter chapter) throws Exception {
         File file = new File(Constant.BOOK_CACHE_PATH + mCollBook.get_id()
@@ -75,39 +85,57 @@ public class NetPageLoader extends PageLoader {
         return br;
     }
 
+    /**
+     * 是否含有章节缓存【判断本地是否缓存过本章节的文件】
+     *
+     * @param chapter
+     * @return
+     */
     @Override
     protected boolean hasChapterData(TxtChapter chapter) {
         return BookManager.isChapterCached(mCollBook.get_id(), chapter.title);
     }
 
-    // 装载上一章节的内容
+    /**
+     * 解析上一章数据   把章节排版
+     */
     @Override
     boolean parsePrevChapter() {
+        // 调用super 解析上一章  是否完成
         boolean isRight = super.parsePrevChapter();
 
+        // 上一章数据解析完成后  已经将上一章下标赋值为本章
         if (mStatus == STATUS_FINISH) {
+            // 预请求上一章数据
             loadPrevChapter();
         } else if (mStatus == STATUS_LOADING) {
+            // 数据根本没缓存过   重新请求本章节的数据  再来解析
             loadCurrentChapter();
         }
         return isRight;
     }
 
-    // 装载当前章内容。
+    /**
+     * 解析当前章节数据   排版成页面列表
+     */
     @Override
     boolean parseCurChapter() {
+        // 先调父类方法尝试解析排版
         boolean isRight = super.parseCurChapter();
-
+        // 排版后 看是否需要去下载
         if (mStatus == STATUS_LOADING) {
+            // 本章未排版成功的话  那就去下载本章数据
             loadCurrentChapter();
         }
         return isRight;
     }
 
-    // 装载下一章节的内容
+    /**
+     * 解析下一章数据  排版
+     */
     @Override
     boolean parseNextChapter() {
-        Log.e("auto","--------------parseNextChapter-parseNextChapter--isMainThread()"+ ReadActivity.isMainThread());
+        Log.e("auto", "--------------parseNextChapter-parseNextChapter--isMainThread()" + ReadActivity.isMainThread());
         boolean isRight = super.parseNextChapter();
 
         if (mStatus == STATUS_FINISH) {
@@ -120,7 +148,7 @@ public class NetPageLoader extends PageLoader {
     }
 
     /**
-     * 加载当前页的前面两个章节
+     * 加载当前页的前面个章节
      */
     private void loadPrevChapter() {
         if (mPageChangeListener != null) {
@@ -129,13 +157,15 @@ public class NetPageLoader extends PageLoader {
             if (begin < 0) {
                 begin = 0;
             }
-
             requestChapters(begin, end);
         }
     }
 
     /**
-     * 加载前一页，当前页，后一页。
+     * 下载 当前章节
+     *  1 解析上一章时发现数据不存在 没法解析  先下载这章的数据、
+     *  2 解析下一章时~
+     *  3 解析本章时~
      */
     private void loadCurrentChapter() {
         if (mPageChangeListener != null) {
@@ -186,6 +216,12 @@ public class NetPageLoader extends PageLoader {
         }
     }
 
+    /**
+     * 进行网络请求加载章节内容
+     *
+     * @param start 要加载的起始章节 下标
+     * @param end   要加载的结束章节 下标
+     */
     private void requestChapters(int start, int end) {
         // 检验输入值
         if (start < 0) {
@@ -202,11 +238,12 @@ public class NetPageLoader extends PageLoader {
         // 过滤，哪些数据已经加载了
         for (int i = start; i <= end; ++i) {
             TxtChapter txtChapter = mChapterList.get(i);
+            // 判断本地是否含有本章节的数据
             if (!hasChapterData(txtChapter)) {
                 chapters.add(txtChapter);
             }
         }
-
+        // 传入要下载的章节集合    进行请求数据
         if (!chapters.isEmpty()) {
             mPageChangeListener.requestChapters(chapters);
         }
